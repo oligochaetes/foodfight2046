@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Meal Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: rgba(79, 172, 254, 0.1);
+            color: #4facfe;
+        }
+
+        .tab.active {
+            color: #4facfe;
+            background: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #4facfe;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .meal-grid {
+            display: grid;
+            grid-template-columns: auto repeat(7, 1fr);
+            gap: 2px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .meal-cell {
+            background: white;
+            padding: 15px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .meal-cell.header {
+            background: #4facfe;
+            color: white;
+            font-weight: 600;
+        }
+
+        .meal-cell.meal-type {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .meal-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .recipe-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .ingredient-item, .supply-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .ingredient-item input, .supply-item input {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #4facfe;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a9cfd;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .recipe-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .recipe-card:hover {
+            border-color: #4facfe;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.2);
+        }
+
+        .recipe-title {
+            font-size: 1.5em;
+            color: #495057;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .shopping-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+        }
+
+        .shopping-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .shopping-item-name {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .shopping-item-recipes {
+            font-size: 12px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .add-recipe-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4facfe;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .add-recipe-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .meal-grid {
+                font-size: 12px;
+            }
+            
+            .meal-cell {
+                padding: 10px;
+                min-height: 60px;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Weekly Meal Planner</h1>
+            <p>Plan your meals, organize recipes, and generate shopping lists</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="meal-plan">Meal Plan</button>
+            <button class="tab" data-tab="shopping-list">Shopping List</button>
+            <button class="tab" data-tab="all-recipes">All Recipes</button>
+        </div>
+
+        <div id="meal-plan" class="tab-content active">
+            <h2>Weekly Meal Plan</h2>
+            <div class="meal-grid" id="mealGrid">
+                <div class="meal-cell header">Meal</div>
+                <div class="meal-cell header">Monday</div>
+                <div class="meal-cell header">Tuesday</div>
+                <div class="meal-cell header">Wednesday</div>
+                <div class="meal-cell header">Thursday</div>
+                <div class="meal-cell header">Friday</div>
+                <div class="meal-cell header">Saturday</div>
+                <div class="meal-cell header">Sunday</div>
+                
+                <div class="meal-cell meal-type">Breakfast</div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="breakfast-monday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="breakfast-tuesday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="breakfast-wednesday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="breakfast-thursday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="breakfast-friday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="breakfast-saturday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="breakfast-sunday"></div>
+                
+                <div class="meal-cell meal-type">Lunch</div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="lunch-monday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="lunch-tuesday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="lunch-wednesday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="lunch-thursday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="lunch-friday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="lunch-saturday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="lunch-sunday"></div>
+                
+                <div class="meal-cell meal-type">Dinner</div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="dinner-monday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="dinner-tuesday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="dinner-wednesday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="dinner-thursday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="dinner-friday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="dinner-saturday"></div>
+                <div class="meal-cell"><input type="text" class="meal-input" data-meal="dinner-sunday"></div>
+            </div>
+        </div>
+
+        <div id="shopping-list" class="tab-content">
+            <h2>Shopping List</h2>
+            <div class="shopping-list" id="shoppingListContainer">
+                <p id="emptyShoppingMessage">Add some recipes to generate your shopping list!</p>
+            </div>
+        </div>
+
+        <div id="all-recipes" class="tab-content">
+            <h2>All Recipes</h2>
+            <div id="recipesContainer">
+                <p id="emptyRecipesMessage">No recipes added yet. Click the + button to add your first recipe!</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="add-recipe-btn" onclick="showAddRecipeForm()">+</button>
+
+    <script>
+        let recipes = [];
+        let mealPlan = {};
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+                
+                if (tabId === 'shopping-list') {
+                    generateShoppingList();
+                } else if (tabId === 'all-recipes') {
+                    displayAllRecipes();
+                }
+            });
+        });
+
+        // Save meal plan changes
+        document.querySelectorAll('.meal-input').forEach(input => {
+            input.addEventListener('change', () => {
+                const mealKey = input.getAttribute('data-meal');
+                mealPlan[mealKey] = input.value;
+            });
+        });
+
+        function showAddRecipeForm() {
+            const formHtml = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 30px; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                        <h3 style="margin-bottom: 20px; color: #495057;">Add New Recipe</h3>
+                        <div class="recipe-form">
+                            <div class="form-group">
+                                <label>Recipe Name</label>
+                                <input type="text" id="recipeName" placeholder="Enter recipe name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Servings</label>
+                                <input type="number" id="recipeServings" placeholder="Number of servings" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Prep Time</label>
+                                <input type="text" id="recipePrepTime" placeholder="e.g., 15 minutes">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Cook Time</label>
+                                <input type="text" id="recipeCookTime" placeholder="e.g., 30 minutes">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Ingredients</label>
+                                <div id="ingredientsList">
+                                    <div class="ingredient-item">
+                                        <input type="text" placeholder="Ingredient name" class="ingredient-name">
+                                        <input type="text" placeholder="Amount (e.g., 2 cups)" class="ingredient-amount">
+                                        <button type="button" class="btn btn-danger" onclick="removeIngredient(this)">Remove</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-secondary" onclick="addIngredient()">Add Ingredient</button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Supplies/Equipment Needed</label>
+                                <div id="suppliesList">
+                                    <div class="supply-item">
+                                        <input type="text" placeholder="Equipment needed" class="supply-name">
+                                        <button type="button" class="btn btn-danger" onclick="removeSupply(this)">Remove</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-secondary" onclick="addSupply()">Add Supply</button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Instructions</label>
+                                <textarea id="recipeInstructions" rows="6" placeholder="Enter cooking instructions..."></textarea>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary" onclick="closeAddRecipeForm()">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="saveRecipe()">Save Recipe</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', formHtml);
+        }
+
+        function closeAddRecipeForm() {
+            document.querySelector('[style*="position: fixed"]').remove();
+        }
+
+        function addIngredient() {
+            const ingredientHtml = `
+                <div class="ingredient-item">
+                    <input type="text" placeholder="Ingredient name" class="ingredient-name">
+                    <input type="text" placeholder="Amount (e.g., 2 cups)" class="ingredient-amount">
+                    <button type="button" class="btn btn-danger" onclick="removeIngredient(this)">Remove</button>
+                </div>
+            `;
+            document.getElementById('ingredientsList').insertAdjacentHTML('beforeend', ingredientHtml);
+        }
+
+        function removeIngredient(button) {
+            button.parentElement.remove();
+        }
+
+        function addSupply() {
+            const supplyHtml = `
+                <div class="supply-item">
+                    <input type="text" placeholder="Equipment needed" class="supply-name">
+                    <button type="button" class="btn btn-danger" onclick="removeSupply(this)">Remove</button>
+                </div>
+            `;
+            document.getElementById('suppliesList').insertAdjacentHTML('beforeend', supplyHtml);
+        }
+
+        function removeSupply(button) {
+            button.parentElement.remove();
+        }
+
+        function saveRecipe() {
+            const name = document.getElementById('recipeName').value.trim();
+            if (!name) {
+                alert('Please enter a recipe name');
+                return;
+            }
+
+            const ingredients = [];
+            document.querySelectorAll('.ingredient-item').forEach(item => {
+                const name = item.querySelector('.ingredient-name').value.trim();
+                const amount = item.querySelector('.ingredient-amount').value.trim();
+                if (name && amount) {
+                    ingredients.push({ name, amount });
+                }
+            });
+
+            const supplies = [];
+            document.querySelectorAll('.supply-item').forEach(item => {
+                const name = item.querySelector('.supply-name').value.trim();
+                if (name) {
+                    supplies.push(name);
+                }
+            });
+
+            const recipe = {
+                id: Date.now(),
+                name: name,
+                servings: document.getElementById('recipeServings').value || '',
+                prepTime: document.getElementById('recipePrepTime').value || '',
+                cookTime: document.getElementById('recipeCookTime').value || '',
+                ingredients: ingredients,
+                supplies: supplies,
+                instructions: document.getElementById('recipeInstructions').value.trim() || ''
+            };
+
+            recipes.push(recipe);
+            closeAddRecipeForm();
+            displayAllRecipes();
+            
+            // Add new tab for this recipe
+            addRecipeTab(recipe);
+        }
+
+        function addRecipeTab(recipe) {
+            const tabsContainer = document.querySelector('.tabs');
+            const newTab = document.createElement('button');
+            newTab.className = 'tab';
+            newTab.setAttribute('data-tab', `recipe-${recipe.id}`);
+            newTab.textContent = recipe.name;
+            newTab.addEventListener('click', () => showRecipeTab(recipe.id));
+            tabsContainer.appendChild(newTab);
+
+            // Create tab content
+            const tabContent = document.createElement('div');
+            tabContent.id = `recipe-${recipe.id}`;
+            tabContent.className = 'tab-content';
+            tabContent.innerHTML = generateRecipeTabContent(recipe);
+            document.querySelector('.container').appendChild(tabContent);
+        }
+
+        function showRecipeTab(recipeId) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            document.querySelector(`[data-tab="recipe-${recipeId}"]`).classList.add('active');
+            document.getElementById(`recipe-${recipeId}`).classList.add('active');
+        }
+
+        function generateRecipeTabContent(recipe) {
+            const ingredientsList = recipe.ingredients.map(ing => 
+                `<li><strong>${ing.amount}</strong> ${ing.name}</li>`
+            ).join('');
+            
+            const suppliesList = recipe.supplies.map(supply => 
+                `<li>${supply}</li>`
+            ).join('');
+
+            return `
+                <div style="max-width: 800px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>${recipe.name}</h2>
+                        <button class="btn btn-danger" onclick="deleteRecipe(${recipe.id})">Delete Recipe</button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                        <div class="recipe-card">
+                            <h3 style="color: #4facfe; margin-bottom: 15px;">📝 Recipe Details</h3>
+                            ${recipe.servings ? `<p><strong>Servings:</strong> ${recipe.servings}</p>` : ''}
+                            ${recipe.prepTime ? `<p><strong>Prep Time:</strong> ${recipe.prepTime}</p>` : ''}
+                            ${recipe.cookTime ? `<p><strong>Cook Time:</strong> ${recipe.cookTime}</p>` : ''}
+                        </div>
+                        
+                        <div class="recipe-card">
+                            <h3 style="color: #4facfe; margin-bottom: 15px;">🔧 Equipment Needed</h3>
+                            ${suppliesList ? `<ul style="padding-left: 20px;">${suppliesList}</ul>` : '<p>No equipment specified</p>'}
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <h3 style="color: #4facfe; margin-bottom: 15px;">🛒 Ingredients</h3>
+                        ${ingredientsList ? `<ul style="padding-left: 20px; line-height: 1.6;">${ingredientsList}</ul>` : '<p>No ingredients specified</p>'}
+                    </div>
+                    
+                    ${recipe.instructions ? `
+                        <div class="recipe-card">
+                            <h3 style="color: #4facfe; margin-bottom: 15px;">👨‍🍳 Instructions</h3>
+                            <div style="white-space: pre-wrap; line-height: 1.6;">${recipe.instructions}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function deleteRecipe(recipeId) {
+            if (confirm('Are you sure you want to delete this recipe?')) {
+                recipes = recipes.filter(r => r.id !== recipeId);
+                
+                // Remove the tab and content
+                document.querySelector(`[data-tab="recipe-${recipeId}"]`).remove();
+                document.getElementById(`recipe-${recipeId}`).remove();
+                
+                // Switch to meal plan tab
+                document.querySelector('[data-tab="meal-plan"]').click();
+                
+                displayAllRecipes();
+            }
+        }
+
+        function displayAllRecipes() {
+            const container = document.getElementById('recipesContainer');
+            const emptyMessage = document.getElementById('emptyRecipesMessage');
+            
+            if (recipes.length === 0) {
+                emptyMessage.style.display = 'block';
+                container.innerHTML = '<p id="emptyRecipesMessage">No recipes added yet. Click the + button to add your first recipe!</p>';
+                return;
+            }
+            
+            emptyMessage.style.display = 'none';
+            
+            const recipesHtml = recipes.map(recipe => `
+                <div class="recipe-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 class="recipe-title">${recipe.name}</h3>
+                        <button class="btn btn-primary" onclick="showRecipeTab(${recipe.id})">View Recipe</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                        <div>
+                            <strong>Ingredients:</strong> ${recipe.ingredients.length} items<br>
+                            ${recipe.servings ? `<strong>Servings:</strong> ${recipe.servings}<br>` : ''}
+                            ${recipe.prepTime ? `<strong>Prep Time:</strong> ${recipe.prepTime}` : ''}
+                        </div>
+                        <div>
+                            <strong>Equipment:</strong> ${recipe.supplies.length} items<br>
+                            ${recipe.cookTime ? `<strong>Cook Time:</strong> ${recipe.cookTime}` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = recipesHtml;
+        }
+
+        function generateShoppingList() {
+            const container = document.getElementById('shoppingListContainer');
+            const emptyMessage = document.getElementById('emptyShoppingMessage');
+            
+            if (recipes.length === 0) {
+                emptyMessage.style.display = 'block';
+                return;
+            }
+            
+            emptyMessage.style.display = 'none';
+            
+            // Get all ingredients from all recipes
+            const allIngredients = {};
+            
+            recipes.forEach(recipe => {
+                recipe.ingredients.forEach(ingredient => {
+                    const name = ingredient.name.toLowerCase();
+                    if (!allIngredients[name]) {
+                        allIngredients[name] = {
+                            displayName: ingredient.name,
+                            amounts: [],
+                            recipes: []
+                        };
+                    }
+                    allIngredients[name].amounts.push(ingredient.amount);
+                    allIngredients[name].recipes.push(recipe.name);
+                });
+            });
+            
+            // Generate shopping list HTML
+            const shoppingHtml = Object.keys(allIngredients)
+                .sort()
+                .map(key => {
+                    const ingredient = allIngredients[key];
+                    const amounts = [...new Set(ingredient.amounts)].join(', ');
+                    const recipes = [...new Set(ingredient.recipes)].join(', ');
+                    
+                    return `
+                        <div class="shopping-item">
+                            <div>
+                                <div class="shopping-item-name">${ingredient.displayName}</div>
+                                <div style="font-size: 14px; color: #28a745; font-weight: 500;">Amount needed: ${amounts}</div>
+                                <div class="shopping-item-recipes">Used in: ${recipes}</div>
+                            </div>
+                            <input type="checkbox" style="transform: scale(1.5);">
+                        </div>
+                    `;
+                }).join('');
+            
+            container.innerHTML = shoppingHtml;
+        }
+
+        // Load sample data
+        function loadSampleData() {
+            const sampleRecipes = [
+                {
+                    id: 1,
+                    name: "Spaghetti Carbonara",
+                    servings: "4",
+                    prepTime: "10 minutes",
+                    cookTime: "15 minutes",
+                    ingredients: [
+                        { name: "Spaghetti", amount: "1 lb" },
+                        { name: "Eggs", amount: "4 large" },
+                        { name: "Bacon", amount: "8 oz" },
+                        { name: "Parmesan cheese", amount: "1 cup grated" },
+                        { name: "Black pepper", amount: "1 tsp" }
+                    ],
+                    supplies: ["Large pot", "Skillet", "Whisk", "Tongs"],
+                    instructions: "1. Cook spaghetti according to package directions.\n2. Cook bacon until crispy.\n3. Whisk eggs with cheese and pepper.\n4. Toss hot pasta with egg mixture and bacon.\n5. Serve immediately."
+                }
+            ];
+
+            recipes = sampleRecipes;
+            sampleRecipes.forEach(recipe => addRecipeTab(recipe));
+            displayAllRecipes();
+        }
+
+        // Load sample data on page load
+        loadSampleData();
+    </script>
+</body>
+</html>
